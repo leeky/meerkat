@@ -15,7 +15,7 @@ module Meerkat
       end
 
       def publish(topic, json)
-        @pub.pubsub.publish topic, json
+        @pub.publish topic, json
       end
 
       def subscribe(topic, &callback)
