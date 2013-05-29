@@ -6,16 +6,16 @@ module Meerkat
       def initialize(redis_uri = nil)
         @subs = {}
         EM.next_tick do
-          @sub = EM::Hiredis.connect redis_uri 
-          @pub = EM::Hiredis.connect redis_uri 
-          @sub.on :pmessage do |topic, channel, message|
+          @sub = EM::Hiredis.connect redis_uri
+          @pub = EM::Hiredis.connect redis_uri
+          @sub.pubsub.on :pmessage do |topic, channel, message|
             @subs[topic].each { |cb| cb.call channel, message }
           end
         end
       end
 
       def publish(topic, json)
-        @pub.publish topic, json
+        @pub.pubsub.publish topic, json
       end
 
       def subscribe(topic, &callback)
@@ -24,7 +24,7 @@ module Meerkat
         else
           @subs[topic] = [ callback ]
           EM.next_tick do
-            @sub.psubscribe topic 
+            @sub.pubsub.psubscribe topic
           end
         end
         [topic, callback]
@@ -35,8 +35,8 @@ module Meerkat
         @subs[topic].delete cb
         if @subs[topic].empty?
           EM.next_tick do
-            @subs.delete topic 
-            @sub.punsubscribe(topic) 
+            @subs.delete topic
+            @sub.pubsub.punsubscribe(topic)
           end
         end
       end
